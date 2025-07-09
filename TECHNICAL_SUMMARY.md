@@ -211,6 +211,9 @@ Developed comprehensive search term libraries targeting specific biological proc
 #### 3.1.1 Cell Quality Metrics
 Initial dataset contained 4,892 cells, reduced to 3,476 cells (71% retention) after quality control:
 
+![Figure 1](figures/qc_metrics_violins.png)
+**Figure 1:** Quality control metrics distribution showing genes per cell, total counts, mitochondrial percentage, and ribosomal percentage across all cells.
+
 **Filtering Impact**:
 - Low gene count removal: 234 cells (4.8%)
 - High gene count removal: 156 cells (3.2%)
