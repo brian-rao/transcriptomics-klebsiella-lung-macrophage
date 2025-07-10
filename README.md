@@ -4,9 +4,9 @@
 
 This project successfully validates the existence of M(KP), a novel macrophage polarization state induced by Klebsiella pneumoniae through systematic reanalysis of published single-cell RNA sequencing data (GSE184290). Using trajectory-based computational approaches, we identified and characterized the molecular signature of M(KP) as a distinct STAT6-dependent alternative activation program that differs fundamentally from classical M1/M2 polarization paradigms.
 
-![Title1](figures/trajectory.jpg "Trajectories of Interstitial Macrophage States from Origin to Terminal with M(Kp) Identified")
+![Title1](figures/trajectory.JPG "Trajectories of Interstitial Macrophage States from Origin to Terminal with M(Kp) Identified")
 
-![Title2](figures/leiden_11.jpg "Interstitial Macrophage clusters from which trajectory was inferred")
+![Title2](figures/leiden_11.JPG "Interstitial Macrophage clusters from which trajectory was inferred")
 
 
 

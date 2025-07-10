@@ -2,9 +2,9 @@
 
 ## NOTE: IN-PROGRESS!
 
-![Title1](figures/trajectory.jpg "Trajectories of Interstitial Macrophage States from Origin to Terminal with M(Kp) Identified")
+![Title1](figures/trajectory.JPG "Trajectories of Interstitial Macrophage States from Origin to Terminal with M(Kp) Identified")
 
-![Title2](figures/leiden_11.jpg "Interstitial Macrophage clusters from which trajectory was inferred")
+![Title2](figures/leiden_11.JPG "Interstitial Macrophage clusters from which trajectory was inferred")
 
 ## Abstract
 
