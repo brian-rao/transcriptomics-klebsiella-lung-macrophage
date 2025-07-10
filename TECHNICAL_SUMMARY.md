@@ -2,6 +2,10 @@
 
 ## NOTE: IN-PROGRESS!
 
+![Title1](figures/trajectory.jpg "Trajectories of Interstitial Macrophage States from Origin to Terminal with M(Kp) Identified")
+
+![Title2](figures/leiden_11.jpg "Interstitial Macrophage clusters from which trajectory was inferred")
+
 ## Abstract
 
 **Background**: Klebsiella pneumoniae infections represent a major clinical challenge due to antibiotic resistance and persistence mechanisms. Recent literature suggests that K. pneumoniae induces a novel macrophage polarization state termed M(KP) that promotes bacterial survival through STAT6-dependent alternative activation. However, computational validation of this state has been challenging due to signal masking by dominant antimicrobial responses.
