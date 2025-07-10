@@ -1,5 +1,7 @@
 # Computational Identification and Validation of M(KP) Macrophage Polarization State: A Trajectory-Based Single-Cell RNA Sequencing Analysis
 
+## NOTE: IN-PROGRESS!
+
 ## Abstract
 
 **Background**: Klebsiella pneumoniae infections represent a major clinical challenge due to antibiotic resistance and persistence mechanisms. Recent literature suggests that K. pneumoniae induces a novel macrophage polarization state termed M(KP) that promotes bacterial survival through STAT6-dependent alternative activation. However, computational validation of this state has been challenging due to signal masking by dominant antimicrobial responses.
@@ -87,20 +89,6 @@ sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
 ```
 
 #### 2.2.3 Dimensional Reduction and Clustering
-```python
-# Principal component analysis
-sc.tl.pca(adata, svd_solver='arpack', n_comps=50)
-
-# Neighborhood graph construction
-sc.pp.neighbors(adata, n_neighbors=15, n_pcs=40)
-
-# UMAP embedding
-sc.tl.umap(adata, min_dist=0.5, spread=1.0)
-
-# Multi-resolution clustering
-for res in [0.1, 0.3, 0.5, 0.8, 1.0, 1.2]:
-    sc.tl.leiden(adata, resolution=res, key_added=f'leiden_{res}')
-```
 
 ### 2.3 Trajectory Analysis Methodology
 
@@ -140,17 +128,6 @@ Systematic testing of clustering resolutions to optimize signal-to-noise ratio:
 **Significance threshold**: Adjusted p-value < 0.05
 **Effect size threshold**: |log2FC| > 0.25
 
-**Implementation**:
-```python
-sc.tl.rank_genes_groups(
-    adata, 
-    groupby='leiden_optimal',
-    reference='rest',
-    method='wilcoxon',
-    pts_filter=0.1,
-    logfc_filter=0.25
-)
-```
 
 #### 2.4.2 Pathway Enrichment Analysis
 **Tool**: G:Profiler (gprofiler-official v1.0.0)
@@ -208,49 +185,95 @@ Developed comprehensive search term libraries targeting specific biological proc
 
 ### 3.1 Quality Control and Data Preprocessing
 
-#### 3.1.1 Cell Quality Metrics
+#### 3.1.1 Cell Quality Metrics - Exploration and Filtering
 Initial dataset contained 4,892 cells, reduced to 3,476 cells (71% retention) after quality control:
 
 ![Figure 1](figures/qc_metrics_violins.png)
 **Figure 1:** Quality control metrics distribution showing genes per cell, total counts, mitochondrial percentage, and ribosomal percentage across all cells.
 
-**Filtering Impact**:
-- Low gene count removal: 234 cells (4.8%)
-- High gene count removal: 156 cells (3.2%)
-- High mitochondrial content: 398 cells (8.1%)
-- Doublet removal: 628 cells (12.8%)
+![Figure 2](figures/qc_scatter_mt.png)
+**Figure 2:** Quality control metrics showing total counts vs gene counts per cell, all showing 0% mitochondrial reflecting that this is a "purified" set of cells.
 
-**Final Dataset Characteristics**:
-- Median genes per cell: 2,847
-- Median UMI per cell: 8,234
-- Median mitochondrial percentage: 5.2%
-- Median ribosomal percentage: 23.1%
+![Figure 3](figures/qc_scatter_ribo.png)
+**Figure 3:** Quality control metrics showing total counts vs gene counts per cell, the normal range of ribosomal genes suggest these cells are not going through abnormal cellular processes that would be unsuitable for our study, expected of the "purified" set.
+
+![Figure 4](figures/qc_by_condition.png)
+**Figure 4:** Distribution of quality control metrics across experimental conditions. Violin plots show the number of genes detected per cell (left) and total UMI counts per cell (right) for each experimental condition.
+
+**Filtering Rationale:**
+
+- Quality over quantity: Better to retain high-quality cells than include questionable ones
+- Conservative approach: Start permissive, can revisit thresholds later if needed
+- Study consistency: Follow the original paper's methodology where possible
+
+**Applied Filters:**
+
+- Minimum 200 genes per cell (removes very low-quality cells)
+- Genes expressed in minimum 3 cells (removes extremely rare genes)
+
+**Filtering Impact**:
+- All cells retained (422 per condition)
+- 1901 lowly expressed genes removed
+
+**Doublet Detection**:
+- Doublet removal via scrublet: 628 cells (12.8%)
+  Doublet detection summary:
+            count  sum  doublet_rate
+    condition                           
+    AM_Control    422   47     11.137441
+    AM_KP+        422   27      6.398104
+    AM_KP-        422   41      9.715640
+    IM_Control    422    6      1.421801
+    IM_KP+        422    7      1.658768
+    IM_KP-        422    5      1.184834
+- These are not removed until after the UMAP is generated, we need to make sure that the doublets are not clustered, which would suggest that it is a particular cell state that is getting false positive identification by scrublet.
 
 #### 3.1.2 Batch Integration Assessment
 **Technical replicates**: Excellent integration with no batch effects detected
 **Biological replicates**: Condition-specific clustering preserved
 **Cell type separation**: Clear AM/IM distinction maintained
+The original study reported strong overlap between replicates within cell types, indicating minimal batch effects. We see this reflected in all our QC metrics. Therefore, we can identify highly variable genes across the entire dataset without requiring batch correction.
 
-### 3.2 Clustering Resolution Optimization
+#### 3.1.3 Highly Variable Gene Detection
+**Highly Variable Gene Detection**
+![Figure 5](figures/qc_hvgs.png)
+**Figure 5:** Dispersions of Highly Variable Genes and their mean expressions before and after normalization.
 
-#### 3.2.1 Systematic Resolution Testing
-Analyzed Leiden clustering across resolutions 0.1-1.25 for interstitial macrophages:
+#### 3.1.4 PCA Selection
+**Highly Variable Gene Detection**
+![Figure 6](figures/qc_pca.png)
+**Figure 6:** Scree plot of variance ratios of PCAs. To stay consistent with the original paper, the top 40 PCs are used.
+PCA completed using 2,000 highly variable genes
+Variance explained by first 10 PCs: 0.432
+Variance explained by first 40 PCs: 0.522
 
-**Resolution 0.1**: Over-merged (2 clusters)
-- Cluster 0: 357 KP+, 417 KP- (mixed population)
-- Cluster 1: 58 KP+, 0 KP- (terminal state)
+#### 3.1.5 Initial Neighborhood Graph Generation
+![Figure 7](figures/qc_UMAP.png)
+**Figure 7:** Neighborhood graph is computed using n_neighbors = 10 and the top 40 PCs.
 
-**Resolution 1.0**: Well-balanced (6 clusters)
-- Cluster 0: 104 KP+, 101 KP- (balanced starting state)
-- Cluster 4: 40 KP+, 68 KP- (bystander-enriched, M(KP) candidate)
-- Cluster 5: 58 KP+, 0 KP- (terminal activation)
 
-**Resolution 1.1**: Optimal signal concentration (6 clusters)
-- Cluster 2: 84 KP+, 81 KP- (balanced M(KP) population)
-- Enhanced STAT6 pathway detection
+#### 3.2 Clustering and Final Cell Filtration
+**Initial Leiden Cluster**
+![Figure 8](figures/qc_Lclustering.png)
+**Figure 8:** Initial UMAP at resolution of 0.5. The arrangement of cells into two large "continents" reflect that these are two difference cell types (AM and IM)
 
-**Resolution 1.2+**: Over-fragmented (7-9 clusters)
-- Small clusters (<25 cells) with limited statistical power
+**Detected Doublets on UMAP**
+![Figure 9](figures/qc_doublet_removal.png)
+**Figure 9:** Leiden clusters at default res (0.5), doublet locations on the UMAP, and doublet score. Doublets and doublet scores are sufficiently dispersed so as to not suspect a cell state being responsible for high gene counts, we safely remove the detected doublets.
+
+**Normalized Gene Counts on UMAP After**
+![Figure 10](figures/qc_UMAP_counts.png)
+**Figure 10:** Normalized UMIs counts and gene counts per cell before and after doublet removal. These plots indicate a quality dataset ready for downsstream processesing.
+
+
+#### 3.2 Systematic Cluster Resolution Testing
+Since we 
+
+Analyzed Leiden clustering across a standard range of resolutions (0.3-0.8) for both macrophage populations. None of the gene sets of either cluster produced any signature of a pathway involving STAT6 (what the paper asserts is the signature of the novel M(KP) polarization state)
+
+Sinc
+Since we are looking for a cell state within what is likely a transient and divergent set of reaction states (macrophages with more than one response) - we use a higher resolution, and test resolutions at small increments between 0.8 and 1.2.
+
 
 #### 3.2.2 Terminal State Stability Analysis
 Remarkable consistency of terminal activation state across all resolutions:
